@@ -18,7 +18,7 @@ ye = np.abs(np.random.normal(0., yerr, 20))
 f1 = open(os.getcwd() + '/Data/line.dat', 'w')
 f1.write('#y = mx + c for m = ' + str(m) + ' and c = ' + str(c) + '\n')
 for i in range(20):
-    f1.write(str() + '\t' + str() + '\t' + str() + '\n')
+    f1.write(str(x[i]) + '\t' + str(y[i]) + '\t' + str(ye[i]) + '\n')
 f1.close()
 
 plt.errorbar(x, y, yerr=ye, fmt='.')
