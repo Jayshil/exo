@@ -33,7 +33,7 @@ per, tc = 2.7240314376, 2459024.6067578471
 ar, rprs = 4.6561340944, 0.0716620112
 
 # Set the number of cores on your machine for parallelism:
-cpu_cores, nos_burn, nos_samp = 2, 5000, 10000
+cpu_cores, nos_burn, nos_samp = 2, 10000, 10000
 numpyro.set_host_device_count(cpu_cores)
 
 # Visualising the data
@@ -149,7 +149,7 @@ print('>>>>>> ----- Total time taken: {:.4f} min'.format((t2-t1)/60))
 # Using arviz to extract results
 # arviz converts a numpyro MCMC object to an `InferenceData` object based on xarray:
 result = az.from_numpyro(mcmc)
-pickle.dump(result, open(os.getcwd() + '/PC/Analysis/res_numpyro.pkl','wb'))
+pickle.dump(result, open(os.getcwd() + '/PC/Analysis/NumPyro1/res_numpyro.pkl','wb'))
 
 all_var_names = ['Ag', 'q', 'omega', 'g', 'sig_w', 'mflux', 'a1', 'a2', 'a3',\
                  'b1', 'b2', 'b3', 'log_s0', 'rho1', 'log_q0']
@@ -157,7 +157,7 @@ all_var_names = ['Ag', 'q', 'omega', 'g', 'sig_w', 'mflux', 'a1', 'a2', 'a3',\
 # Trace plots
 _ = az.plot_trace(result, var_names=all_var_names)
 plt.tight_layout()
-plt.savefig(os.getcwd() + '/PC/Analysis/trace.png', dpi=500)
+plt.savefig(os.getcwd() + '/PC/Analysis/NumPyro1/trace.png', dpi=500)
 plt.close()
 #plt.show()
 
@@ -167,7 +167,7 @@ print(summary)
 
 # Corner plot
 _ = corner.corner(result, var_names=all_var_names);#, truths=truth,);
-plt.savefig(os.getcwd() + '/PC/Analysis/corner.png', dpi=500)
+plt.savefig(os.getcwd() + '/PC/Analysis/NumPyro1/corner.pdf')#, dpi=500)
 plt.close()
 #plt.show()
 
@@ -195,4 +195,5 @@ axs.set_ylabel('Normalised Flux', fontsize=14)
 plt.setp(axs.get_xticklabels(), fontsize=12)
 plt.setp(axs.get_yticklabels(), fontsize=12)
 plt.grid()
-plt.show()
+#plt.show()
+plt.savefig(os.getcwd() + '/PC/Analysis/NumPyro1/model.png', dpi=500)
