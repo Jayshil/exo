@@ -11,6 +11,7 @@ from celerite2.jax import terms as jax_terms
 import numpyro
 from numpyro.infer import MCMC, NUTS
 from numpyro import distributions as dist
+import numpyro_ext.optim
 import arviz as az
 import corner
 import os
@@ -29,12 +30,14 @@ import time
 # Sadly, I could not install jupyter notebook for native environment (which contains my jax installation)
 # So, we have to do with a python code!
 
+pout = os.getcwd() + '/PC/Analysis/NumPyro5/'
+
 # Planet parameters
 per, tc = 2.7240314376, 2459024.6067578471
 ar, rprs = 4.6561340944, 0.0716620112
 
 # Set the number of cores on your machine for parallelism:
-cpu_cores, nos_burn, nos_samp = 2, 10000, 10000
+cpu_cores, nos_burn, nos_samp = 2, 15000, 15000
 numpyro.set_host_device_count(cpu_cores)
 
 # Visualising the data
@@ -127,6 +130,17 @@ def model():
     #numpyro.sample('obs', dist.Normal(loc=tot_model, scale=jnp.sqrt(fle**2 + (sig1**2))), obs=fl)
     numpyro.sample("obs", gp.numpyro_dist(), obs=resid)
 
+
+all_var_names = ['Ag', 'q', 'omega', 'g', 'sig_w', 'mflux', 'a1', 'a2', 'a3',\
+                 'b1', 'b2', 'b3', 'log_s0', 'rho1', 'log_q0']
+
+"""run_optim = numpyro_ext.optim.optimize(model, init_strategy=numpyro.infer.init_to_median())
+opt_params = run_optim(jax.random.PRNGKey(42))#, tim, fle, fl)
+
+for k, v in opt_params.items():
+    if k in all_var_names:
+        print(f"{k}: {v}")"""
+
 ## -------   And sampling
 # Random numbers in jax are generated like this:
 rng_seed = 42
@@ -134,13 +148,15 @@ rng_keys = split(PRNGKey(rng_seed), cpu_cores)
 
 # Define a sampler, using here the No U-Turn Sampler (NUTS)
 # with a dense mass matrix:
-sampler = NUTS(model, dense_mass=True)
+sampler = NUTS(model, dense_mass=True,\
+               regularize_mass_matrix=False,\
+               init_strategy=numpyro.infer.init_to_median())
 
 # Monte Carlo sampling for a number of steps and parallel chains:
 mcmc = MCMC(sampler, num_warmup=nos_burn, num_samples=nos_samp, num_chains=cpu_cores)
 
 # Run the MCMC
-mcmc.run(rng_keys)
+mcmc.run(rng_keys)#, tim, fle, fl)
 # -------- Sampling Done!!
 t2 = time.time()
 
@@ -150,15 +166,12 @@ print('>>>>>> ----- Total time taken: {:.4f} min'.format((t2-t1)/60))
 # Using arviz to extract results
 # arviz converts a numpyro MCMC object to an `InferenceData` object based on xarray:
 result = az.from_numpyro(mcmc)
-pickle.dump(result, open(os.getcwd() + '/PC/Analysis/NumPyro1/res_numpyro.pkl','wb'))
-
-all_var_names = ['Ag', 'q', 'omega', 'g', 'sig_w', 'mflux', 'a1', 'a2', 'a3',\
-                 'b1', 'b2', 'b3', 'log_s0', 'rho1', 'log_q0']
+pickle.dump(result, open(pout + '/res_numpyro.pkl','wb'))
 
 # Trace plots
 _ = az.plot_trace(result, var_names=all_var_names)
 plt.tight_layout()
-plt.savefig(os.getcwd() + '/PC/Analysis/NumPyro1/trace.png', dpi=500)
+plt.savefig(pout + '/trace.png', dpi=500)
 plt.close()
 #plt.show()
 
@@ -168,7 +181,7 @@ print(summary)
 
 # Corner plot
 _ = corner.corner(result, var_names=all_var_names);#, truths=truth,);
-plt.savefig(os.getcwd() + '/PC/Analysis/NumPyro1/corner.pdf')#, dpi=500)
+plt.savefig(pout + '/corner.pdf')#, dpi=500)
 plt.close()
 #plt.show()
 
@@ -190,11 +203,11 @@ fig, axs = plt.subplots(figsize=(16/1.5, 9/1.5))
 axs.errorbar(tim, fl_det, yerr=np.sqrt(fle**2 + (np.median(sig1) * 1e-6)**2), fmt='.')
 axs.plot(tim, np.nanmedian(phys_model, axis=0), 'k-', lw=2., zorder=10)
 for i in range(50):
-    axs.plot(tim, phys_model[np.random.randint(0,int(cpu_cores * nos_samp)),:], 'k-', alpha=0.1)
+    axs.plot(tim, phys_model[np.random.randint(0,int(cpu_cores * nos_samp)),:], 'r-', alpha=0.1, zorder=10)
 axs.set_xlabel('Time (BJD)', fontsize=14)
 axs.set_ylabel('Normalised Flux', fontsize=14)
 plt.setp(axs.get_xticklabels(), fontsize=12)
 plt.setp(axs.get_yticklabels(), fontsize=12)
 plt.grid()
 #plt.show()
-plt.savefig(os.getcwd() + '/PC/Analysis/NumPyro1/model.png', dpi=500)
+plt.savefig(pout + '/model.png', dpi=500)
