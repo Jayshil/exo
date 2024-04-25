@@ -144,7 +144,7 @@ sampler = NUTS(model, dense_mass=True,\
 mcmc = MCMC(sampler, num_warmup=3_000, num_samples=3_000, num_chains=cpu_cores)
 
 # Run the MCMC
-mcmc.run(rng_keys, tim, fle, fl)
+mcmc.run(rng_keys)#, tim, fle, fl)
 # -------- Sampling Done!!
 
 
