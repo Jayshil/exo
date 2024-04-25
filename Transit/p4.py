@@ -56,7 +56,7 @@ rprs, rprs_err = 0.0475, 0.0006
 
 # And modelling it
 ## First defining a numpyro model
-def model(tim, fle, fl):
+def model():
     # Priors on the model parameters
     tc = numpyro.sample('tc', dist.Uniform(low=0.4, high=0.6))
     dur = numpyro.sample('duration', dist.Uniform(low=0.1, high=0.5))
@@ -114,7 +114,7 @@ all_var_names = ['tc', 'duration', 'bb', 'rprs', 'u1', 'u2', 'mflx', 'sig_w',\
                  'a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'logW0', 'logS0']
 
 run_optim = numpyro_ext.optim.optimize(model, init_strategy=numpyro.infer.init_to_median())
-opt_params = run_optim(jax.random.PRNGKey(42), tim, fle, fl)
+opt_params = run_optim(jax.random.PRNGKey(42))#, tim, fle, fl)
 
 for k, v in opt_params.items():
     if k in all_var_names:
@@ -123,10 +123,11 @@ for k, v in opt_params.items():
 """optimizer = numpyro.optim.Minimize()
 guide = AutoLaplaceApproximation(model)
 svi = SVI(model, guide, optimizer, loss=Trace_ELBO())
-init_state = svi.init(PRNGKey(0), tim, fle, fl)
-optimal_state, loss = svi.update(init_state, tim, fle, fl)
+init_state = svi.init(PRNGKey(42))#, tim, fle, fl)
+optimal_state, loss = svi.update(init_state)#, tim, fle, fl)
 params = svi.get_params(optimal_state)  # get guide's parameters
-print(params)"""
+quantiles = guide.quantiles(params, 0.5)
+print(quantiles)"""
 
 ## -------   And sampling
 # Random numbers in jax are generated like this:
