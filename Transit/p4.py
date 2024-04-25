@@ -1,8 +1,9 @@
-from jax.config import config
-config.update("jax_enable_x64", True)
-
 import numpy as np
 import matplotlib.pyplot as plt
+import jax
+jax.config.update(
+    "jax_enable_x64", True
+)  # For 64-bit precision since JAX defaults to 32-bit
 from jax.random import PRNGKey, split
 import celerite2.jax
 from celerite2.jax import terms as jax_terms
