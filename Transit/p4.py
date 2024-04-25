@@ -9,8 +9,10 @@ import celerite2.jax
 from celerite2.jax import terms as jax_terms
 import jax.numpy as jnp
 import numpyro
-from numpyro.infer import MCMC, NUTS
+from numpyro.infer import MCMC, NUTS, SVI, Trace_ELBO
 from numpyro import distributions as dist
+from numpyro.infer.autoguide import AutoLaplaceApproximation
+import numpyro_ext.optim
 from jaxoplanet.light_curves import limb_dark_light_curve
 from jaxoplanet.orbits import TransitOrbit
 import arviz as az
@@ -27,7 +29,7 @@ import pickle
 # So, we have to do with a python code!
 
 # Set the number of cores on your machine for parallelism:
-pout = os.getcwd() + '/Transit/Analysis/NumPyro_Real'
+pout = os.getcwd() + '/Transit/Analysis/NumPyro_Real1'
 cpu_cores = 2
 numpyro.set_host_device_count(cpu_cores)
 
@@ -54,7 +56,7 @@ rprs, rprs_err = 0.0475, 0.0006
 
 # And modelling it
 ## First defining a numpyro model
-def model():
+def model(tim, fle, fl):
     # Priors on the model parameters
     tc = numpyro.sample('tc', dist.Uniform(low=0.4, high=0.6))
     dur = numpyro.sample('duration', dist.Uniform(low=0.1, high=0.5))
@@ -107,6 +109,25 @@ def model():
     # And the likelihood function,
     numpyro.sample("obs", gp.numpyro_dist(), obs=resid)
 
+
+all_var_names = ['tc', 'duration', 'bb', 'rprs', 'u1', 'u2', 'mflx', 'sig_w',\
+                 'a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'logW0', 'logS0']
+
+run_optim = numpyro_ext.optim.optimize(model, init_strategy=numpyro.infer.init_to_median())
+opt_params = run_optim(jax.random.PRNGKey(42), tim, fle, fl)
+
+for k, v in opt_params.items():
+    if k in all_var_names:
+        print(f"{k}: {v}")
+
+"""optimizer = numpyro.optim.Minimize()
+guide = AutoLaplaceApproximation(model)
+svi = SVI(model, guide, optimizer, loss=Trace_ELBO())
+init_state = svi.init(PRNGKey(0), tim, fle, fl)
+optimal_state, loss = svi.update(init_state, tim, fle, fl)
+params = svi.get_params(optimal_state)  # get guide's parameters
+print(params)"""
+
 ## -------   And sampling
 # Random numbers in jax are generated like this:
 rng_seed = 42
@@ -114,17 +135,16 @@ rng_keys = split(PRNGKey(rng_seed), cpu_cores)
 
 # Define a sampler, using here the No U-Turn Sampler (NUTS)
 # with a dense mass matrix:
-sampler = NUTS(model, dense_mass=True)
+sampler = NUTS(model, dense_mass=True,\
+               regularize_mass_matrix=False,\
+               init_strategy=numpyro.infer.init_to_value(values=opt_params))
 
 # Monte Carlo sampling for a number of steps and parallel chains:
 mcmc = MCMC(sampler, num_warmup=3_000, num_samples=3_000, num_chains=cpu_cores)
 
 # Run the MCMC
-mcmc.run(rng_keys)
+mcmc.run(rng_keys, tim, fle, fl)
 # -------- Sampling Done!!
-
-all_var_names = ['tc', 'duration', 'bb', 'rprs', 'u1', 'u2', 'mflx', 'sig_w',\
-                 'a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'logW0', 'logS0']
 
 
 # Using arviz to extract results
