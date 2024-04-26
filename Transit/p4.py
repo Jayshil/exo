@@ -29,12 +29,13 @@ import pickle
 # So, we have to do with a python code!
 
 # Set the number of cores on your machine for parallelism:
-pout = os.getcwd() + '/Transit/Analysis/NumPyro_Real1'
+pout = os.getcwd() + '/Transit/Analysis/NumPyro_Real'
 cpu_cores = 2
 numpyro.set_host_device_count(cpu_cores)
 
 # Visualising the data
 tim, fl, fle, roll = np.loadtxt(os.getcwd() + '/Data/kelt-11-cheops.dat', usecols=(0,1,2,3), unpack=True)
+roll = np.radians(roll)
 #tim = tim - tim[0]
 
 fig, axs = plt.subplots(figsize=(16/1.5, 9/1.5))
@@ -113,12 +114,12 @@ def model():
 all_var_names = ['tc', 'duration', 'bb', 'rprs', 'u1', 'u2', 'mflx', 'sig_w',\
                  'a1', 'a2', 'a3', 'b1', 'b2', 'b3', 'logW0', 'logS0']
 
-run_optim = numpyro_ext.optim.optimize(model, init_strategy=numpyro.infer.init_to_median())
+"""run_optim = numpyro_ext.optim.optimize(model, init_strategy=numpyro.infer.init_to_median())
 opt_params = run_optim(jax.random.PRNGKey(42))#, tim, fle, fl)
 
 for k, v in opt_params.items():
     if k in all_var_names:
-        print(f"{k}: {v}")
+        print(f"{k}: {v}")"""
 
 """optimizer = numpyro.optim.Minimize()
 guide = AutoLaplaceApproximation(model)
@@ -138,7 +139,7 @@ rng_keys = split(PRNGKey(rng_seed), cpu_cores)
 # with a dense mass matrix:
 sampler = NUTS(model, dense_mass=True,\
                regularize_mass_matrix=False,\
-               init_strategy=numpyro.infer.init_to_value(values=opt_params))
+               init_strategy=numpyro.infer.init_to_median())
 
 # Monte Carlo sampling for a number of steps and parallel chains:
 mcmc = MCMC(sampler, num_warmup=3_000, num_samples=3_000, num_chains=cpu_cores)
