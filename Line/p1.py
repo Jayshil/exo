@@ -30,9 +30,11 @@ plt.show()
 def log_like(vars):
     global x, y, ye
     m, c = vars
+    # mass_of_galaxy, Z = vars
 
     # Model of a line
     model = m*x + c
+    # m1_before_merger, m2_before_merger, mass_after_merger = FastCluster(mass_of_galaxy, Z, N=1e4)
 
     # Gaussian log-likelihood function
     log2pi = np.log(2*np.pi)
