@@ -38,7 +38,7 @@ def log_like(vars):
 
     # Gaussian log-likelihood function
     log2pi = np.log(2*np.pi)
-    resid = (y-model)**2
+    resid = (y-model)
     taus = 1. / ye**2
     return -0.5 * (len(resid) * log2pi + np.sum(-np.log(taus.astype(float)) + taus * (resid**2)))
 
