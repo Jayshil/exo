@@ -6,6 +6,11 @@ import jaxoplanet
 from jaxoplanet.light_curves import limb_dark_light_curve
 from jaxoplanet.orbits import TransitOrbit
 
+import jax
+jax.config.update(
+    "jax_enable_x64", True
+)  # For 64-bit precision since JAX defaults to 32-bit
+
 rst, rst_err = 2.69, 0.04
 mst, mst_err = 1.44, 0.07
 per, t0 = 2.7240314376, 0.0
