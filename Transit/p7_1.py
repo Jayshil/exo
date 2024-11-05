@@ -74,7 +74,7 @@ def model():
                                 bb=bb,\
                                 rprs=rprs,\
                                 u1=u1,\
-                                u2=u2)
+                                u2=u2)[:,0]
         
         numpyro.deterministic('y' + str(ins), y_pred)
         # And the likelihood function,
@@ -90,7 +90,7 @@ p_fit['density'], p_fit['t0'], p_fit['per'] = 101.99972925358642, 2458553.813830
 p_fit['bb'], p_fit['rprs0'], p_fit['rprs1'] = 0.42399998480309753, 0.04757317, 0.05767105
 p_fit['u10'], p_fit['u11'] = 0.15495113, 0.1969721
 p_fit['u20'], p_fit['u21'] = 0.18450278, 0.2585243
-p_fit['sig_w0'], p_fit['sig_w1'] = 18.34155647483716, 18.34155647483716
+p_fit['sig_w0'], p_fit['sig_w1'] = 18.34155647483716, 25.17617026156423
 
 """# Uses adam optimiser and a Laplace approximation calculated from the hessian of the log posterior as a guide
 optimizer = numpyro.optim.Adam(step_size=5e-2)
