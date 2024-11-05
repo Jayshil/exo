@@ -123,7 +123,7 @@ for k, v in p_fit.items():
 
 
 # Random numbers in jax are generated like this:
-rng_seed = 42
+rng_seed = 10
 rng_keys = split(PRNGKey(rng_seed), cpu_cores)
 
 # Define a sampler, using here the No U-Turn Sampler (NUTS)
