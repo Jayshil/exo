@@ -37,7 +37,7 @@ for i in range(len(instruments)):
     tim[instruments[i]], fl[instruments[i]], fle[instruments[i]] = jnp.asarray(tim1), jnp.asarray(fl1), jnp.asarray(fle1)
 
 # Set the number of cores on your machine for parallelism:
-pout = os.getcwd() + '/Transit/Analysis/Synth_2data_vmap'
+pout = os.getcwd() + '/Transit/Analysis/Synth_2data_vmapjit'
 
 """def evaluate_model(times, density, t0, per, bb, rprs, u1, u2):
     star = keplerian.Central(density=density[0]/rho_sun)
@@ -61,7 +61,7 @@ def evaluate_model(times, density, t0, per, bb, rprs, u1, u2):
     return model
 
 
-evaluate_model_vmap = jax.vmap(evaluate_model, in_axes=(0, None, None, None, None, 0, 0, 0), out_axes=0)
+evaluate_model_vmap = jax.jit(jax.vmap(evaluate_model, in_axes=(0, None, None, None, None, 0, 0, 0), out_axes=0))
 
 """Y = evaluate_model_vmap(jnp.asarray([ tim[instruments[0]], tim[instruments[1]] ]),\
                         jnp.asarray([104.]),\
